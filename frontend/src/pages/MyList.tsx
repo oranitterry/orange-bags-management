@@ -8,7 +8,7 @@ const MyList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchText, setSearchText] = useState('');
-
+  const [openStreet, setOpenStreet] = useState<string | null>(null);
 
 
   useEffect(() => {
@@ -40,6 +40,11 @@ const MyList: React.FC = () => {
     fetchData();
   }, []);
 
+  const filtered = deliveries.filter(d => 
+    d.addressId?.fullAddress?.includes(searchText)
+  );
+  const grouped = Object.groupBy(filtered, (d: any) => d.addressId?.propertyAddress);
+
   return (
     <div style={{ direction: 'rtl', padding: '20px' }}>
       {/* 1. שימוש ב-user מעלים את האזהרה הראשונה */}
@@ -66,14 +71,30 @@ const MyList: React.FC = () => {
           {deliveries.length === 0 ? (
             <p>לא נמצאו כתובות לביצוע.</p>
           ) : (
-            deliveries
-              .filter(d => d.addressId?.propertyAddress?.includes(searchText))
-              .map((item) => (
-                <div key={item._id} style={{ borderBottom: '1px solid #eee', padding: '10px 0' }}>
-                  <p><strong>כתובת:</strong> {item.addressId?.propertyAddress} {item.addressId?.houseNumber}</p>
-                  <p>סטטוס: {item.status}</p>
+            Object.entries(grouped).map(([street, items]: [string, any]) => {
+              const isOpen = openStreet === street;
+              return (
+                <div key={street} style={{ marginBottom: '8px', border: '1px solid #ddd', borderRadius: '8px', overflow: 'hidden' }}>
+                  <div onClick={() => setOpenStreet(isOpen ? null : street)}
+                    style={{ cursor: 'pointer', padding: '12px', background: '#f0f8f4', display: 'flex', justifyContent: 'space-between' }}>
+                    <strong>{street}</strong>
+                    <span>{isOpen ? '▲' : '▼'} ({items?.length} כתובות)</span>
+                  </div>
+                  {isOpen && (
+                    <div>
+                      {items?.map((item: any) => (
+                        <div key={item._id} style={{ borderBottom: '1px solid #eee', padding: '10px 12px' }}>
+                          <p><strong>{item.addressId?.houseNumber}</strong> — דירה {item.addressId?.apartmentNumber}</p>
+                          <p style={{ color: item.status === 'distributed' ? 'green' : item.status === 'not_delivered' ? 'red' : 'gray' }}>
+                            {item.status === 'distributed' ? '✅ חולק' : item.status === 'not_delivered' ? '❌ לא נמסר' : '⏳ ממתין'}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              ))
+              );
+            })
           )}
         </div>
       )}
