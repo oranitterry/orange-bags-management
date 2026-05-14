@@ -49,7 +49,7 @@ const MyList: React.FC = () => {
       {/* 2. שימוש ב-searchText ו-setSearchText מעלים את אזהרות החיפוש */}
       <input 
         type="text" 
-        placeholder="חפשי רחוב או מספר בית..." 
+        placeholder="חפש/י רחוב או מספר בית..." 
         value={searchText}
         onChange={(e) => setSearchText(e.target.value)}
         style={{ marginBottom: '20px', padding: '8px', width: '100%' }}

@@ -79,12 +79,23 @@ router.post('/assign', authenticate, requireRole('admin', 'superadmin'), async (
       return;
     }
 
-    const records = await DeliveryRecord.find({ roundId })
+    const records = await DeliveryRecord.find({ 
+      roundId: require('mongoose').Types.ObjectId.createFromHexString(roundId) 
+    })
       .populate('addressId', 'areaName');
+    
+      console.log('Total records found:', records.length);
+      console.log('First record addressId:', JSON.stringify(records[0]?.addressId));
 
-    const areaRecords = records.filter(
-      r => (r.addressId as unknown as { areaName: string })?.areaName === areaName
-    );
+      const areaRecords = records.filter(r => {
+        const addr = r.addressId as unknown as { areaName: string };
+        const dbArea = addr?.areaName?.trim();
+        const reqArea = Buffer.from(areaName, 'latin1').toString('utf8').trim();
+        return dbArea === reqArea || dbArea === areaName.trim();
+      });
+    console.log('areaRecords length:', areaRecords.length);
+    console.log('Looking for areaName:', areaName);
+    console.log('typeof areaName:', typeof areaName); 
 
     // חלוקה שווה בין המתנדבים
     let userIndex = 0;
