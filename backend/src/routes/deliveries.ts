@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 import DeliveryRecord from '../models/DeliveryRecord';
 import { Response } from 'express';
+import User from '../models/User';
+import Address from '../models/Address';
 
 const router = Router();
 
@@ -16,9 +18,11 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
 
     // משתמש רגיל רואה רק את הכתובות שלו
     if (req.user?.role === 'user') {
-      filter.assignedTo = req.user.id;
-    } else if (assignedTo) {
-      filter.assignedTo = assignedTo;
+      const userData = await User.findById(req.user.id);
+      const areas = userData?.assignedAreas || [];
+      const addresses = await Address.find({ areaName: { $in: areas } });
+      const addressIds = addresses.map(a => a._id);
+      filter.addressId = { $in: addressIds };
     }
 
     const records = await DeliveryRecord.find(filter)
