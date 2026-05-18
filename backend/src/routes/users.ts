@@ -41,6 +41,11 @@ router.post('/', authenticate, requireRole('admin', 'superadmin'), async (req: A
 router.patch('/:id', authenticate, requireRole('superadmin'), async (req, res) => {
   try {
     const { name, role, phone, assignedAreas, isActive } = req.body;
+    if (req.body.password) {
+      const bcrypt = require('bcryptjs');
+      req.body.passwordHash = await bcrypt.hash(req.body.password, 12);
+      delete req.body.password;
+    }
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { name, role, phone, assignedAreas, isActive },
@@ -51,6 +56,11 @@ router.patch('/:id', authenticate, requireRole('superadmin'), async (req, res) =
   } catch {
     res.status(500).json({ error: 'שגיאת שרת' });
   }
+  if (req.body.password) {
+  const bcrypt = require('bcryptjs');
+  req.body.passwordHash = await bcrypt.hash(req.body.password, 12);
+  delete req.body.password;
+}
 });
 
 export default router;

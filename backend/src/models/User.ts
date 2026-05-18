@@ -9,6 +9,7 @@ export interface IUser extends Document {
   assignedAreas: string[];
   isActive: boolean;
   lastLogin?: Date;
+  volunteerType?: string;
 }
 
 const UserSchema = new Schema<IUser>({
@@ -20,6 +21,7 @@ const UserSchema = new Schema<IUser>({
   assignedAreas: [{ type: String }],
   isActive: { type: Boolean, default: true },
   lastLogin: { type: Date },
+  volunteerType: { type: String, enum: ['מתנדב', 'עובד תברואה'], default: 'מתנדב' },
 }, { timestamps: true });
 
 export default mongoose.model<IUser>('User', UserSchema);

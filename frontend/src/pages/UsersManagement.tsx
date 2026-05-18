@@ -8,6 +8,7 @@ const UsersManagement: React.FC = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState<any>(null);
     const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [showCreateModal, setShowCreateModal] = useState(false);
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -36,7 +37,9 @@ const UsersManagement: React.FC = () => {
         <div style={{ direction: 'rtl', padding: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <h1>ניהול משתמשים</h1>
-                <button style={{ background: '#1a5c38', color: 'white', border: 'none', borderRadius: '8px', padding: '10px 20px', cursor: 'pointer', fontWeight: 'bold' }}>
+                <button
+                    onClick={() => setShowCreateModal(true)}
+                    style={{ background: '#1a5c38', color: 'white', border: 'none', borderRadius: '8px', padding: '10px 20px', cursor: 'pointer', fontWeight: 'bold' }}>
                     ＋ הוסף משתמש
                 </button>
             </div>
@@ -70,7 +73,7 @@ const UsersManagement: React.FC = () => {
                                 <td style={{ padding: '10px' }}>{user.role === 'superadmin' ? '—' : user.volunteerType || '—'}</td>
                                 <td style={{ padding: '10px' }}>{user.phone || '—'}</td>
                                 <td style={{ padding: '10px' }}>{user.assignedAreas?.join(', ') || '—'}</td>
-                                <td style={{ padding: '10px' }}>{new Date(user.createdAt).toLocaleDateString('he-IL')}</td>
+                                <td style={{ padding: '10px' }}>{user.createdAt ? new Date(user.createdAt).toLocaleDateString('he-IL') : '—'}</td>
                                 <td style={{ padding: '10px' }}>{user.lastLogin ? new Date(user.lastLogin).toLocaleDateString('he-IL') : '—'}</td>
                                 <td style={{ padding: '10px' }}>{user.isActive ? '✅ פעיל' : '🔴 נעול'}</td>
                                 <td style={{ padding: '10px', display: 'flex', gap: '6px' }}>
@@ -244,6 +247,73 @@ const UsersManagement: React.FC = () => {
                             }}
                                 style={{ padding: '8px 20px', borderRadius: '6px', border: 'none', background: '#1a5c38', color: 'white', cursor: 'pointer', fontWeight: 'bold' }}>
                                 שמור
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {showCreateModal && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
+                }} onClick={() => setShowCreateModal(false)}>
+                    <div style={{
+                        backgroundColor: '#fff', padding: '24px', borderRadius: '12px',
+                        width: '90%', maxWidth: '450px', direction: 'rtl'
+                    }} onClick={e => e.stopPropagation()}>
+                        <h3 style={{ marginTop: 0, color: '#1a5c38' }}>הוספת משתמש חדש</h3>
+
+                        <label style={{ fontWeight: 'bold' }}>שם:</label>
+                        <input id="new-name" style={{ width: '100%', padding: '8px', marginBottom: '12px', borderRadius: '6px', border: '1px solid #ddd', boxSizing: 'border-box' }} />
+
+                        <label style={{ fontWeight: 'bold' }}>אימייל:</label>
+                        <input id="new-email" type="email" style={{ width: '100%', padding: '8px', marginBottom: '12px', borderRadius: '6px', border: '1px solid #ddd', boxSizing: 'border-box' }} />
+
+                        <label style={{ fontWeight: 'bold' }}>סיסמה ראשונית:</label>
+                        <input id="new-pass" type="password" style={{ width: '100%', padding: '8px', marginBottom: '12px', borderRadius: '6px', border: '1px solid #ddd', boxSizing: 'border-box' }} />
+
+                        <label style={{ fontWeight: 'bold' }}>תפקיד:</label>
+                        <select id="new-role" style={{ width: '100%', padding: '8px', marginBottom: '12px', borderRadius: '6px', border: '1px solid #ddd' }}>
+                            <option value="user">מתנדב / עובד תברואה</option>
+                            <option value="admin">מנהל (Admin)</option>
+                        </select>
+
+                        <label style={{ fontWeight: 'bold' }}>סוג:</label>
+                        <select id="new-type" style={{ width: '100%', padding: '8px', marginBottom: '12px', borderRadius: '6px', border: '1px solid #ddd' }}>
+                            <option>מתנדב</option>
+                            <option>עובד תברואה</option>
+                        </select>
+
+                        <label style={{ fontWeight: 'bold' }}>טלפון:</label>
+                        <input id="new-phone" style={{ width: '100%', padding: '8px', marginBottom: '20px', borderRadius: '6px', border: '1px solid #ddd', boxSizing: 'border-box' }} />
+
+                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                            <button onClick={() => setShowCreateModal(false)}
+                                style={{ padding: '8px 20px', borderRadius: '6px', border: '1px solid #ddd', cursor: 'pointer' }}>
+                                ביטול
+                            </button>
+                            <button onClick={async () => {
+                                const name = (document.getElementById('new-name') as HTMLInputElement)?.value;
+                                const email = (document.getElementById('new-email') as HTMLInputElement)?.value;
+                                const password = (document.getElementById('new-pass') as HTMLInputElement)?.value;
+                                const role = (document.getElementById('new-role') as HTMLSelectElement)?.value;
+                                const volunteerType = (document.getElementById('new-type') as HTMLSelectElement)?.value;
+                                const phone = (document.getElementById('new-phone') as HTMLInputElement)?.value;
+
+                                if (!name || !email || !password) { alert('נדרש שם, אימייל וסיסמה'); return; }
+
+                                try {
+                                    const res = await api.post('/users', { name, email, password, role, volunteerType, phone });
+                                    setUsers(prev => [...prev, res.data]);
+                                    setShowCreateModal(false);
+                                    alert('המשתמש נוצר בהצלחה!');
+                                } catch {
+                                    alert('שגיאה ביצירת המשתמש');
+                                }
+                            }}
+                                style={{ padding: '8px 20px', borderRadius: '6px', border: 'none', background: '#1a5c38', color: 'white', cursor: 'pointer', fontWeight: 'bold' }}>
+                                צור משתמש
                             </button>
                         </div>
                     </div>
