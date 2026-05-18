@@ -9,7 +9,7 @@ import { Response } from 'express';
 const router = Router();
 
 // GET /api/rounds - רשימת כל המחזורים
-router.get('/', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
+router.get('/', authenticate, requireRole('admin', 'superadmin', 'user'), async (req, res) => {
   try {
     const rounds = await Round.find().sort({ createdAt: -1 });
     res.json(rounds);

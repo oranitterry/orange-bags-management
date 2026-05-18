@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 import DeliveryRecord from '../models/DeliveryRecord';
 import { Response } from 'express';
+import User from '../models/User';
+import Address from '../models/Address';
 
 const router = Router();
 
@@ -16,9 +18,11 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
 
     // משתמש רגיל רואה רק את הכתובות שלו
     if (req.user?.role === 'user') {
-      filter.assignedTo = req.user.id;
-    } else if (assignedTo) {
-      filter.assignedTo = assignedTo;
+      const userData = await User.findById(req.user.id);
+      const areas = userData?.assignedAreas || [];
+      const addresses = await Address.find({ areaName: { $in: areas } });
+      const addressIds = addresses.map(a => a._id);
+      filter.addressId = { $in: addressIds };
     }
 
     const records = await DeliveryRecord.find(filter)
@@ -79,12 +83,23 @@ router.post('/assign', authenticate, requireRole('admin', 'superadmin'), async (
       return;
     }
 
-    const records = await DeliveryRecord.find({ roundId })
+    const records = await DeliveryRecord.find({ 
+      roundId: require('mongoose').Types.ObjectId.createFromHexString(roundId) 
+    })
       .populate('addressId', 'areaName');
+    
+      console.log('Total records found:', records.length);
+      console.log('First record addressId:', JSON.stringify(records[0]?.addressId));
 
-    const areaRecords = records.filter(
-      r => (r.addressId as unknown as { areaName: string })?.areaName === areaName
-    );
+      const areaRecords = records.filter(r => {
+        const addr = r.addressId as unknown as { areaName: string };
+        const dbArea = addr?.areaName?.trim();
+        const reqArea = Buffer.from(areaName, 'latin1').toString('utf8').trim();
+        return dbArea === reqArea || dbArea === areaName.trim();
+      });
+    console.log('areaRecords length:', areaRecords.length);
+    console.log('Looking for areaName:', areaName);
+    console.log('typeof areaName:', typeof areaName); 
 
     // חלוקה שווה בין המתנדבים
     let userIndex = 0;
