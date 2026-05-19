@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface Stats {
   summary: { pending: number; distributed: number; not_delivered: number; total: number };
@@ -26,6 +27,7 @@ const Dashboard: React.FC = () => {
   const [showNewRound, setShowNewRound] = useState(false);
   const [newRoundName, setNewRoundName] = useState('');
   const [creating, setCreating] = useState(false);
+  const navigate = useNavigate();
 
   const fetchRounds = () => {
     api.get('/rounds').then(res => {
@@ -96,7 +98,7 @@ const Dashboard: React.FC = () => {
     : 0;
 
   const currentRound = rounds.find(r => r._id === selectedRound);
-
+  console.log('role:', user?.role);
   return (
     <div style={{ minHeight: '100vh', background: '#f0f8f4', direction: 'rtl' }}>
       {/* Header */}
@@ -112,6 +114,12 @@ const Dashboard: React.FC = () => {
           <span style={{ fontSize: 14 }}>שלום, {user?.name}</span>
           <span style={{ fontSize: 12, background: 'rgba(255,255,255,0.2)', padding: '2px 10px', borderRadius: 99 }}>{user?.role}</span>
           <button onClick={logout} style={{ background: 'rgba(255,255,255,0.2)', color: 'white', border: 'none', borderRadius: 8, padding: '6px 16px', cursor: 'pointer' }}>יציאה</button>
+          {user?.role === 'superadmin' && (
+            <button onClick={() => navigate('/home')}
+              style={{ background: 'rgba(255,255,255,0.2)', color: 'white', border: 'none', borderRadius: '8px', padding: '6px 16px', cursor: 'pointer' }}>
+              🏠 בית
+            </button>
+          )}
         </div>
       </div>
 

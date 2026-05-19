@@ -1,5 +1,7 @@
 import api from '../api/axios';
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const UsersManagement: React.FC = () => {
     const [users, setUsers] = useState<any[]>([]);
@@ -9,6 +11,9 @@ const UsersManagement: React.FC = () => {
     const [selectedUser, setSelectedUser] = useState<any>(null);
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [showCreateModal, setShowCreateModal] = useState(false);
+    const { logout } = useAuth();
+    const [newRole, setNewRole] = useState('user');
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -41,6 +46,13 @@ const UsersManagement: React.FC = () => {
                     onClick={() => setShowCreateModal(true)}
                     style={{ background: '#1a5c38', color: 'white', border: 'none', borderRadius: '8px', padding: '10px 20px', cursor: 'pointer', fontWeight: 'bold' }}>
                     ＋ הוסף משתמש
+                </button>
+                <button onClick={logout} style={{ background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', padding: '8px 16px', cursor: 'pointer' }}>
+                    יציאה
+                </button>
+                <button onClick={() => navigate('/home')}
+                    style={{ background: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', padding: '10px 20px', cursor: 'pointer' }}>
+                    🏠 בית
                 </button>
             </div>
 
@@ -274,16 +286,20 @@ const UsersManagement: React.FC = () => {
                         <input id="new-pass" type="password" style={{ width: '100%', padding: '8px', marginBottom: '12px', borderRadius: '6px', border: '1px solid #ddd', boxSizing: 'border-box' }} />
 
                         <label style={{ fontWeight: 'bold' }}>תפקיד:</label>
-                        <select id="new-role" style={{ width: '100%', padding: '8px', marginBottom: '12px', borderRadius: '6px', border: '1px solid #ddd' }}>
+                        <select id="new-role" onChange={e => setNewRole(e.target.value)}
+                            style={{ width: '100%', padding: '8px', marginBottom: '12px', borderRadius: '6px', border: '1px solid #ddd' }}>
                             <option value="user">מתנדב / עובד תברואה</option>
                             <option value="admin">מנהל (Admin)</option>
                         </select>
-
-                        <label style={{ fontWeight: 'bold' }}>סוג:</label>
-                        <select id="new-type" style={{ width: '100%', padding: '8px', marginBottom: '12px', borderRadius: '6px', border: '1px solid #ddd' }}>
-                            <option>מתנדב</option>
-                            <option>עובד תברואה</option>
-                        </select>
+                        {newRole === 'user' && (
+                            <>
+                                <label style={{ fontWeight: 'bold' }}>סוג:</label>
+                                <select id="new-type" style={{ width: '100%', padding: '8px', marginBottom: '12px', borderRadius: '6px', border: '1px solid #ddd' }}>
+                                    <option>מתנדב</option>
+                                    <option>עובד תברואה</option>
+                                </select>
+                            </>
+                        )}
 
                         <label style={{ fontWeight: 'bold' }}>טלפון:</label>
                         <input id="new-phone" style={{ width: '100%', padding: '8px', marginBottom: '20px', borderRadius: '6px', border: '1px solid #ddd', boxSizing: 'border-box' }} />
@@ -318,8 +334,9 @@ const UsersManagement: React.FC = () => {
                         </div>
                     </div>
                 </div>
-            )}
-        </div>
+            )
+            }
+        </div >
 
     );
 };

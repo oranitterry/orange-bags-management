@@ -40,27 +40,24 @@ router.post('/', authenticate, requireRole('admin', 'superadmin'), async (req: A
 // PATCH /api/users/:id
 router.patch('/:id', authenticate, requireRole('superadmin'), async (req, res) => {
   try {
-    const { name, role, phone, assignedAreas, isActive } = req.body;
+    const { name, role, phone, assignedAreas, isActive, volunteerType } = req.body;
+    const updateData: any = { name, role, phone, assignedAreas, isActive, volunteerType };
+
     if (req.body.password) {
       const bcrypt = require('bcryptjs');
-      req.body.passwordHash = await bcrypt.hash(req.body.password, 12);
-      delete req.body.password;
+      updateData.passwordHash = await bcrypt.hash(req.body.password, 12);
     }
+
     const user = await User.findByIdAndUpdate(
       req.params.id,
-      { name, role, phone, assignedAreas, isActive },
+      updateData,
       { new: true }
     ).select('-passwordHash');
+
     if (!user) { res.status(404).json({ error: 'משתמש לא נמצא' }); return; }
     res.json(user);
   } catch {
     res.status(500).json({ error: 'שגיאת שרת' });
   }
-  if (req.body.password) {
-  const bcrypt = require('bcryptjs');
-  req.body.passwordHash = await bcrypt.hash(req.body.password, 12);
-  delete req.body.password;
-}
 });
-
 export default router;
