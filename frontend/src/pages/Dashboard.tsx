@@ -246,6 +246,24 @@ const Dashboard: React.FC = () => {
                   <div style={{ textAlign: 'center', padding: 60, color: '#aaa' }}>אין נתונים עדיין</div>
                 )}
               </div>
+              <div style={{ marginTop: 24, textAlign: 'left' }}>
+                <button
+                  onClick={async () => {
+                    const token = localStorage.getItem('token');
+                    const res = await fetch(`http://localhost:5000/api/rounds/${selectedRound}/export`, {
+                      headers: { Authorization: `Bearer ${token}` }
+                    });
+                    const blob = await res.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'export.xlsx';
+                    a.click();
+                  }}
+                  style={{ background: '#1a5c38', color: 'white', border: 'none', borderRadius: 8, padding: '12px 24px', cursor: 'pointer', fontWeight: 700, fontSize: 15 }}>
+                  📥 ייצוא Excel
+                </button>
+              </div>
             </div>
           </>
         )}
