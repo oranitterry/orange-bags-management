@@ -105,4 +105,72 @@ router.get('/:id/stats', authenticate, requireRole('admin', 'superadmin'), async
   }
 });
 
+router.get('/:id/export', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
+  try {
+    const ExcelJS = require('exceljs');
+    
+    const records = await DeliveryRecord.find({
+      roundId: require('mongoose').Types.ObjectId.createFromHexString(req.params.id)
+    })
+      .populate('addressId', 'areaName propertyAddress houseNumber apartmentNumber')
+      .populate('distributedBy', 'name');
+
+    const round = await require('../models/Round').default.findById(req.params.id);
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('חלוקה');
+
+    worksheet.columns = [
+      { header: 'שכונה', key: 'area', width: 15 },
+      { header: 'רחוב', key: 'street', width: 20 },
+      { header: 'בית', key: 'house', width: 8 },
+      { header: 'דירה', key: 'apt', width: 8 },
+      { header: 'סטטוס', key: 'status', width: 15 },
+      { header: 'תאריך חלוקה', key: 'date', width: 15 },
+      { header: 'מי חילק', key: 'who', width: 20 },
+      { header: 'אופן מסירה', key: 'method', width: 20 },
+      { header: 'הערות', key: 'notes', width: 30 },
+    ];
+
+    // עיצוב כותרת
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).fill = {
+      type: 'pattern', pattern: 'solid',
+      fgColor: { argb: 'FF1a5c38' }
+    };
+    worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+
+    const statusMap: Record<string, string> = {
+      pending: 'ממתין',
+      distributed: 'חולק',
+      not_delivered: 'לא נמסר',
+      return_visit: 'יחזור',
+    };
+
+    records.forEach(r => {
+      const addr = r.addressId as any;
+      worksheet.addRow({
+        area: addr?.areaName || '',
+        street: addr?.propertyAddress || '',
+        house: addr?.houseNumber || '',
+        apt: addr?.apartmentNumber || '',
+        status: statusMap[r.status] || r.status,
+        date: r.distributedAt ? new Date(r.distributedAt).toLocaleDateString('he-IL') : '',
+        who: (r.distributedBy as any)?.name || '',
+        method: r.deliveryMethod || '',
+        notes: r.notes || '',
+      });
+    });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="round-export.xlsx"`);
+    
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'שגיאת שרת' });
+  }
+});
+
 export default router;
