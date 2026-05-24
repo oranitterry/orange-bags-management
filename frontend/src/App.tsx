@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import MyList from './pages/MyList';
 import UsersManagement from './pages/UsersManagement';
 import Home from './pages/HomePage';
+import AddressList from './pages/AddressList';
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -25,6 +26,7 @@ const App: React.FC = () => {
           <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
           <Route path="/users" element={<PrivateRoute><UsersManagement /></PrivateRoute>} />
           <Route path="/home" element={<PrivateRoute><Home /></PrivateRoute>} />
+          <Route path="/addresses" element={<PrivateRoute><AddressList /></PrivateRoute>} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

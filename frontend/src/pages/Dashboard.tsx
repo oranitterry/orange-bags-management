@@ -28,6 +28,8 @@ const Dashboard: React.FC = () => {
   const [newRoundName, setNewRoundName] = useState('');
   const [creating, setCreating] = useState(false);
   const navigate = useNavigate();
+  const [showNewAddress, setShowNewAddress] = useState(false);
+  const [newAddress, setNewAddress] = useState({ areaName: '', propertyAddress: '', houseNumber: '', apartmentNumber: '' });
 
   const fetchRounds = () => {
     api.get('/rounds').then(res => {
@@ -153,6 +155,16 @@ const Dashboard: React.FC = () => {
             style={{ background: '#c0561a', color: 'white', border: 'none', borderRadius: 8, padding: '10px 20px', cursor: 'pointer', fontWeight: 700, fontSize: 15 }}>
             ＋ מחזור חדש
           </button>
+
+          <button onClick={() => setShowNewAddress(true)}
+            style={{ background: '#3b82f6', color: 'white', border: 'none', borderRadius: 8, padding: '10px 20px', cursor: 'pointer', fontWeight: 700, fontSize: 15 }}>
+            ＋ הוסף כתובת
+          </button>
+
+          <button onClick={() => navigate('/addresses')}
+            style={{ background: '#6366f1', color: 'white', border: 'none', borderRadius: 8, padding: '10px 20px', cursor: 'pointer', fontWeight: 700, fontSize: 15 }}>
+            📋 רשימת כתובות
+          </button>
         </div>
 
         {/* Modal מחזור חדש */}
@@ -175,6 +187,57 @@ const Dashboard: React.FC = () => {
                 </button>
               </div>
             </div>
+            {showNewAddress && (
+              <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+                <div style={{ background: 'white', borderRadius: 16, padding: 32, width: 400, direction: 'rtl' }}>
+                  <h2 style={{ color: '#1a5c38', marginTop: 0 }}>הוסף כתובת חדשה</h2>
+
+                  <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>שכונה:</label>
+                  <input value={newAddress.areaName} onChange={e => setNewAddress({ ...newAddress, areaName: e.target.value })}
+                    placeholder="למשל: חצבים"
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 15, boxSizing: 'border-box', marginBottom: 12 }} />
+
+                  <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>רחוב:</label>
+                  <input value={newAddress.propertyAddress} onChange={e => setNewAddress({ ...newAddress, propertyAddress: e.target.value })}
+                    placeholder="למשל: מואב"
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 15, boxSizing: 'border-box', marginBottom: 12 }} />
+
+                  <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>מספר בית:</label>
+                  <input value={newAddress.houseNumber} onChange={e => setNewAddress({ ...newAddress, houseNumber: e.target.value })}
+                    placeholder="למשל: 5"
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 15, boxSizing: 'border-box', marginBottom: 12 }} />
+
+                  <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>מספר דירה:</label>
+                  <input value={newAddress.apartmentNumber} onChange={e => setNewAddress({ ...newAddress, apartmentNumber: e.target.value })}
+                    placeholder="למשל: 3"
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ddd', fontSize: 15, boxSizing: 'border-box', marginBottom: 24 }} />
+
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <button onClick={async () => {
+                      try {
+                        await api.post('/addresses', {
+                          ...newAddress,
+                          houseNumber: Number(newAddress.houseNumber),
+                          apartmentNumber: Number(newAddress.apartmentNumber) || 0
+                        });
+                        setShowNewAddress(false);
+                        setNewAddress({ areaName: '', propertyAddress: '', houseNumber: '', apartmentNumber: '' });
+                        alert('הכתובת נוספה בהצלחה!');
+                      } catch {
+                        alert('שגיאה בהוספת הכתובת');
+                      }
+                    }}
+                      style={{ flex: 1, background: '#1a5c38', color: 'white', border: 'none', borderRadius: 8, padding: 12, cursor: 'pointer', fontWeight: 700 }}>
+                      הוסף כתובת
+                    </button>
+                    <button onClick={() => setShowNewAddress(false)}
+                      style={{ flex: 1, background: '#eee', border: 'none', borderRadius: 8, padding: 12, cursor: 'pointer' }}>
+                      ביטול
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

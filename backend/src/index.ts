@@ -7,6 +7,7 @@ import roundRoutes from './routes/rounds';
 import deliveryRoutes from './routes/deliveries';
 import userRoutes from './routes/users';
 import { createInitialAdmin } from './controllers/authController';
+import addressesRoutes from './routes/addresses';
 
 dotenv.config();
 
@@ -24,6 +25,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/rounds', roundRoutes);
 app.use('/api/deliveries', deliveryRoutes);
 app.use('/api/users', userRoutes);
+console.log('addresses route registered');
+app.use('/api/addresses', addressesRoutes);
+app.use('/api/addresses', addressesRoutes);
+
 
 // חיבור ל-MongoDB
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/orange_bags')
