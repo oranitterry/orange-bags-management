@@ -30,6 +30,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [showNewAddress, setShowNewAddress] = useState(false);
   const [newAddress, setNewAddress] = useState({ areaName: '', propertyAddress: '', houseNumber: '', apartmentNumber: '' });
+  const [importing, setImporting] = useState(false);
 
   const fetchRounds = () => {
     api.get('/rounds').then(res => {
@@ -72,6 +73,26 @@ const Dashboard: React.FC = () => {
     if (!confirm('לסגור את המחזור?')) return;
     await api.patch(`/rounds/${id}/close`);
     fetchRounds();
+  };
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    try {
+      const XLSX = await import('xlsx');
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet) as any[];
+
+      await api.post('/addresses/import', { addresses: rows });
+      alert(`יובאו ${rows.length} כתובות בהצלחה!`);
+    } catch {
+      alert('שגיאה בייבוא הקובץ');
+    } finally {
+      setImporting(false);
+    }
   };
 
   const areaData = React.useMemo(() => {
@@ -165,6 +186,10 @@ const Dashboard: React.FC = () => {
             style={{ background: '#6366f1', color: 'white', border: 'none', borderRadius: 8, padding: '10px 20px', cursor: 'pointer', fontWeight: 700, fontSize: 15 }}>
             📋 רשימת כתובות
           </button>
+          <label style={{ background: '#f59e0b', color: 'white', border: 'none', borderRadius: 8, padding: '10px 20px', cursor: 'pointer', fontWeight: 700, fontSize: 15 }}>
+            {importing ? 'מייבא...' : '📥 ייבוא Excel'}
+            <input type="file" accept=".xlsx,.xls" onChange={handleImportExcel} style={{ display: 'none' }} />
+          </label>
         </div>
 
         {/* Modal מחזור חדש */}
