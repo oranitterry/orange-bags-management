@@ -8,38 +8,58 @@ const router = Router();
 
 router.post('/', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
     try {
-      const { areaName, propertyAddress, houseNumber, apartmentNumber } = req.body;
-      
-      if (!areaName || !propertyAddress || !houseNumber) {
-        res.status(400).json({ error: 'נדרש שכונה, רחוב ומספר בית' });
-        return;
-      }
-  
-      // יצירת כתובת חדשה
-      const fullAddress = `${areaName} ${propertyAddress} ${houseNumber} ${apartmentNumber || ''}`.trim();
-      const address = await Address.create({
-        areaName, propertyAddress, houseNumber, apartmentNumber: apartmentNumber || 0,
-        fullAddress, propertyNumber: 0
-      });
-  
-      // מציאת מחזור פעיל
-      const activeRound = await Round.findOne({ status: 'active' });
-      if (activeRound) {
-        await DeliveryRecord.create({
-          roundId: activeRound._id,
-          addressId: address._id,
-          status: 'pending',
+        const { areaName, propertyAddress, houseNumber, apartmentNumber } = req.body;
+
+        if (!areaName || !propertyAddress || !houseNumber) {
+            res.status(400).json({ error: 'נדרש שכונה, רחוב ומספר בית' });
+            return;
+        }
+
+        // יצירת כתובת חדשה
+        const fullAddress = `${areaName} ${propertyAddress} ${houseNumber} ${apartmentNumber || ''}`.trim();
+        const address = await Address.create({
+            areaName, propertyAddress, houseNumber, apartmentNumber: apartmentNumber || 0,
+            fullAddress, propertyNumber: 0
         });
-      }
-  
-      res.status(201).json({ address, addedToRound: !!activeRound });
+
+        // מציאת מחזור פעיל
+        const activeRound = await Round.findOne({ status: 'active' });
+        if (activeRound) {
+            await DeliveryRecord.create({
+                roundId: activeRound._id,
+                addressId: address._id,
+                status: 'pending',
+            });
+        }
+
+        res.status(201).json({ address, addedToRound: !!activeRound });
     } catch (err: any) {
-      if (err.code === 11000) {
-        res.status(400).json({ error: 'כתובת זו כבר קיימת במערכת' });
-        return;
-      }
-      res.status(500).json({ error: 'שגיאת שרת' });
+        if (err.code === 11000) {
+            res.status(400).json({ error: 'כתובת זו כבר קיימת במערכת' });
+            return;
+        }
+        res.status(500).json({ error: 'שגיאת שרת' });
     }
-  });
-  
-  export default router;
+});
+
+router.get('/', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
+    try {
+        const activeRound = await Round.findOne({ status: 'active' });
+        if (!activeRound) {
+            res.json([]);
+            return;
+        }
+
+        const records = await DeliveryRecord.find({ roundId: activeRound._id })
+            .populate('addressId', 'areaName propertyAddress houseNumber apartmentNumber fullAddress')
+            .populate('assignedTo', 'name')
+            .sort({ 'addressId.areaName': 1 });
+
+        res.json(records);
+    } catch {
+        res.status(500).json({ error: 'שגיאת שרת' });
+    }
+
+});
+
+export default router;
