@@ -6,6 +6,44 @@ import DeliveryRecord from '../models/DeliveryRecord';
 
 const router = Router();
 
+router.post('/import', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
+    try {
+        const { addresses } = req.body;
+        if (!addresses?.length) {
+            res.status(400).json({ error: 'לא נשלחו כתובות' });
+            return;
+        }
+
+        let added = 0;
+        let skipped = 0;
+
+        for (const row of addresses) {
+            try {
+                const areaName = row['AreaName'] || row['שכונה'] || '';
+                const propertyAddress = row['PropertyAddress'] || row['רחוב'] || '';
+                const houseNumber = Number(row['HouseNumber'] || row['מספר בית'] || 0);
+                const apartmentNumber = Number(row['ApartmentNumber'] || row['דירה'] || 0);
+                const fullAddress = `${areaName} ${propertyAddress} ${houseNumber} ${apartmentNumber || ''}`.trim();
+
+                if (!areaName || !propertyAddress || !houseNumber) {
+                    skipped++;
+                    continue;
+                }
+
+                await Address.create({ areaName, propertyAddress, houseNumber, apartmentNumber, fullAddress, propertyNumber: 0 });
+                added++;
+            } catch (err: any) {
+                if (err.code === 11000) skipped++; // כתובת כפולה
+                else throw err;
+            }
+        }
+
+        res.json({ added, skipped, total: addresses.length });
+    } catch {
+        res.status(500).json({ error: 'שגיאת שרת' });
+    }
+});
+
 router.post('/', authenticate, requireRole('admin', 'superadmin'), async (req, res) => {
     try {
         const { areaName, propertyAddress, houseNumber, apartmentNumber } = req.body;
