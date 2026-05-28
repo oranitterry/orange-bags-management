@@ -3,7 +3,7 @@ import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 
 const MyList: React.FC = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [deliveries, setDeliveries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -15,6 +15,7 @@ const MyList: React.FC = () => {
   const [notes, setNotes] = useState('');
   const [deliveryMethod, setDeliveryMethod] = useState('');
   const [activeTab, setActiveTab] = useState<'pending' | 'distributed' | 'not_delivered'>('pending');
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -60,9 +61,9 @@ const MyList: React.FC = () => {
   };
 
   const filtered = deliveries
-  .filter(d => d.status === activeTab)
-  .filter(d => d.addressId?.fullAddress?.includes(searchText));
-  
+    .filter(d => d.status === activeTab)
+    .filter(d => d.addressId?.fullAddress?.includes(searchText));
+
   const grouped = Object.groupBy(filtered, (d: any) => d.addressId?.propertyAddress);
   const DELIVERED_METHODS = [
     'ישירות לתושב (כולל הסבר)',
@@ -77,7 +78,12 @@ const MyList: React.FC = () => {
 
   return (
     <div style={{ direction: 'rtl', padding: '20px' }}>
-      <h1>שלום {user?.name}</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1>שלום {user?.name}</h1>
+        <button onClick={logout} style={{ background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', padding: '10px 20px', cursor: 'pointer' }}>
+          יציאה
+        </button>
+      </div>
       <h3>הרשימה שלי</h3>
       <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
         {[

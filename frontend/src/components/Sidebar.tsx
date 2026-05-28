@@ -2,6 +2,11 @@ import React, { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+<<<<<<< HEAD
+=======
+import aradLogo from '../assets/arad-logo.png';
+import amnir from '../assets/amnir.png';
+>>>>>>> 0444c64 (improve UI - add Arad logo, Amnir mascot, Rubik font, logout button)
 
 interface SidebarProps {
   selectedRound?: string;
@@ -74,6 +79,15 @@ const Sidebar: React.FC<SidebarProps> = ({
       width: '220px', minHeight: '100vh', background: '#1a5c38',
       padding: '20px 12px', direction: 'rtl', flexShrink: 0,
     }}>
+<<<<<<< HEAD
+=======
+
+      {/* header עם לוגו ואמניר */}
+      <div style={{ textAlign: 'center', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.2)', background: 'transparent', borderRadius: '12px', }}>
+        <img src={amnir} alt="אמניר" style={{ width: '100px', display: 'block', margin: '0 auto' }} />
+      </div>
+
+>>>>>>> 0444c64 (improve UI - add Arad logo, Amnir mascot, Rubik font, logout button)
       <div style={{ color: 'white', fontSize: '16px', fontWeight: 700, marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
         🟠 פעולות
       </div>
